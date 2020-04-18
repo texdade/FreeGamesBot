@@ -13,12 +13,35 @@ def addNewGame(newGames):
     content = driver.page_source
 
     #set up soup for webscraping
-    soup = BeautifulSoup(content, features="html.parser")
+    websiteSoup = BeautifulSoup(content, features="html.parser")
 
     #search for interesting part
-    promotions = soup.find_all('tr', class_='app sub')
+    promotions = websiteSoup.find_all('tr', class_='app sub')
 
-    print(promotions)
+    for game in promotions:
+        gameSoup = BeautifulSoup(str(game), features="html.parser")
+
+        #find game titles and whether they are free
+        arr = gameSoup.find_all('b') 
+        title = arr[0].contents[0] #game title is in first <b> tag
+        try:
+            arr[1].contents #if game's free to keep there's an indication into another <b> tag
+            keep = True
+        except:
+            keep = False
+
+        #find out if game promotion is active
+        arr = gameSoup.find_all('td', class_='timeago')
+        started = arr[0].contents
+        started = str(started[0]).split(" ")
+        if(started[2] == "ago"):
+            active = True
+        else:
+            active = False
+
+        if(keep):
+            print(title)
+            print(active)
 
 
 while True:
@@ -38,4 +61,17 @@ while True:
     print("Idling one hour...")
     time.sleep(3600)
             
+
+
+
+
+
+
+
+
+
+
+
+
+
 
