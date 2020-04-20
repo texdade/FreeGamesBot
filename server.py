@@ -34,16 +34,31 @@ def addNewGame(newGames):
         arr = gameSoup.find_all('td', class_='timeago')
         started = arr[0].contents
         started = str(started[0]).split(" ")
-        if(started[2] == "ago"):
+        if(keep and started[2] == "ago"):
             active = True
+
+            #if offer's active, check if it's a game and not a dlc/soundtrack
+            arr = gameSoup.find_all('a')
+            infoUrl = "https://steamdb.info"+arr[1]['href']
+            driver.get(infoUrl)
+            gameInfo = driver.page_source
+            infoSoup = BeautifulSoup(gameInfo, features="html.parser")
+            #find all games
+            arr = infoSoup.find_all('td', string="Game")
+            if(arr is not []):
+                isGame = True
+            else:
+                isGame = False
         else:
             active = False
 
-        if(keep):
-            print(title)
-            print(active)
+        #if the promotion is a free to keep game (not dlc or stuff)
+        if(keep and isGame):
+            print(title + " " + str(active) + " " + str(isGame))
 
 
+
+#main loop that repeats every hour
 while True:
     newGames = []
     notifiedGames = []
