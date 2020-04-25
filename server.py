@@ -61,6 +61,8 @@ def addNewGame(newGames):
     #close chrome after having checked on all games
     driver.quit()
 
+def forgeBotMsg(title):
+    return str(title) + " gratis su Steam"
 
 
 # # # # # # # # #
@@ -70,35 +72,46 @@ def addNewGame(newGames):
 #dictionary containing all the game promotions already notified
 notifiedGames = set()
 
+gamesBot = gamesBot()
+
 #csv file containing all the games that have already been sent to the telegram bot
 with open('notifiedPromotions.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     for row in csv_reader:
-        notifiedGames.add(row[0])
+        notifiedGames.add(str(row[0]))
         
 
 #main loop that repeats every hour
 while True:
     newGames = set()
     addNewGame(newGames)
-    print("#NOTIFIED GAMES#")
-    print(notifiedGames)
-    print("#NEW GAMES#")
-    print(newGames)
+    
+    #Remove the notified promotions which are no more active
+    removedGames = notifiedGames - newGames
+    #Notify only the promotions which weren't notified before
     newGames = newGames - notifiedGames
-    print("SUBIMITTING")
-    print(newGames)
+    notifiedGames = notifiedGames - removedGames
+    
     if(newGames):
-        for items in newGames:
+        for item in newGames:
             try:
-                msg = forgeBotMsg(items)
+                msg = forgeBotMsg(item)
             except:
                 msg = None
-            #if msg is not None:
-                #gamesBot.sendMessage()
+            if msg is not None:
+                gamesBot.sendMessage(msg)
     
-    print("Idling one hour...")
-    time.sleep(3600)
+    #add the new game to the notified ones
+    notifiedGames = notifiedGames.union(newGames)
+    
+    #update csv file with notified games in case of crash
+    with open('notifiedPromotions.csv', mode='w') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        for game in notifiedGames:
+            csv_writer.writerow([game])
+
+    print("Idling eight hours...")
+    time.sleep(3600*8)
             
 
 

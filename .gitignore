@@ -1,3 +1,4 @@
 bot_config.cfg
 *.pyc
 fetched.html
+notifiedPromotions.csv
