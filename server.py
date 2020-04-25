@@ -2,6 +2,7 @@ from bot import gamesBot
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import time
+import csv
 
 def addNewGame(newGames):
     #set up webdriver to fetch page
@@ -45,25 +46,48 @@ def addNewGame(newGames):
             infoSoup = BeautifulSoup(gameInfo, features="html.parser")
             #find all games
             arr = infoSoup.find_all('td', string="Game")
-            if(arr is not []):
+            if(len(arr) > 0):
                 isGame = True
             else:
                 isGame = False
         else:
             active = False
 
-        #if the promotion is a free to keep game (not dlc or stuff)
-        if(keep and isGame):
-            print(title + " " + str(active) + " " + str(isGame))
+        #if the promotion is a free to keep game (not dlc or stuff) and also active, 
+        # add it to the game to be notified
+        if(keep and isGame and active):
+            newGames.add(title)
+
+    #close chrome after having checked on all games
+    driver.quit()
 
 
+
+# # # # # # # # #
+#     MAIN      #
+# # # # # # # # #
+
+#dictionary containing all the game promotions already notified
+notifiedGames = set()
+
+#csv file containing all the games that have already been sent to the telegram bot
+with open('notifiedPromotions.csv') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    for row in csv_reader:
+        notifiedGames.add(row[0])
+        
 
 #main loop that repeats every hour
 while True:
-    newGames = []
-    notifiedGames = []
+    newGames = set()
     addNewGame(newGames)
-
+    print("#NOTIFIED GAMES#")
+    print(notifiedGames)
+    print("#NEW GAMES#")
+    print(newGames)
+    newGames = newGames - notifiedGames
+    print("SUBIMITTING")
+    print(newGames)
     if(newGames):
         for items in newGames:
             try:
